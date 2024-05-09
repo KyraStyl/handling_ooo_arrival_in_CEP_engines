@@ -1,0 +1,13 @@
+// 1. START DOCKER OF KAFKA AND EXPORT PORT
+
+sudo docker run -p 9092:9092 apache/kafka:3.7.0
+
+// 2. CREATE TOPICS
+
+sudo kafka/kafka/bin/kafka-topics.sh --create --topic <TOPIC NAME> --bootstrap-server localhost:9092
+
+// 3. WRITE EVENTS INTO THE TOPICS
+
+sudo kafka/kafka/bin/kafka-console-producer.sh --topic <TOPIC NAME> --bootstrap-server localhost:9092
+
+events schema: {"name":"first-fitbit","timestamp":"2024-04-01T14:00:00"}
