@@ -101,7 +101,7 @@ public class CustomKafkaListener<T> implements Runnable {
                 //                this.messageSet.add((T) event);
                 ArrayList<ABCEvent> eventsExtracted = source.processMessage(message);
                 for (ABCEvent e : eventsExtracted) {
-                    System.out.println("Source == " + source.name() + "-- event ts == " + e.getTimestamp());
+                    System.out.println("Source == " + source.name() + "-- event ts == " + e.getTimestampDate());
                     eventManager.acceptEvent(e.getType(), e);
                 }
                 consumer.commitSync(Collections.singletonMap(

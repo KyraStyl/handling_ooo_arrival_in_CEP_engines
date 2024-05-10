@@ -41,6 +41,8 @@ public class Source<T> {
         return eventTypes.get(type);
     }
 
+    public boolean hasEventType(String type){ return eventTypes.containsKey(type);}
+
     public ArrayList<ABCEvent> processMessage(JSONObject message){
         return handler.processMessage(message);
 

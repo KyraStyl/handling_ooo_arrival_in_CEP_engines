@@ -37,7 +37,7 @@ class EventBuffer {
     }
 
     private boolean inequality_check(ABCEvent e){
-        return e.getTimestamp().getTime() + this.a*this.k <= this.clk;
+        return e.getTimestampDate().getTime() + this.a*this.k <= this.clk;
     }
 
     public int compareToAEP(ABCEvent e){
@@ -45,7 +45,7 @@ class EventBuffer {
     }
 
     public void updateCLK(ABCEvent e){
-        this.clk = e.getTimestamp().getTime();
+        this.clk = e.getTimestampDate().getTime();
     }
 
     public boolean purgeEvents(){

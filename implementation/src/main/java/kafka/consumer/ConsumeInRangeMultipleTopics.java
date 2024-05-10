@@ -9,6 +9,7 @@ import handlers.MessageHandlerRegistry;
 import managers.EventManager;
 import org.apache.kafka.clients.consumer.*;
 import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.errors.WakeupException;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -77,8 +78,16 @@ public class ConsumeInRangeMultipleTopics implements Runnable {
 
         boolean continueConsuming = true;
         HashMap<String, TreeSet<ABCEvent>> treeSetHashMap = new HashMap<>();
+
         while (continueConsuming) {
-            ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(1000));
+            System.out.println("continue consuming");
+            ConsumerRecords<String, String> records = null;
+            try {
+                records = consumer.poll(Duration.ofMillis(100000));
+                System.out.println("i consumed "+records.count()+" events");
+            } catch (WakeupException e) {
+                // Ignore for shutdown
+            }
             for (ConsumerRecord<String, String> record : records) {
                 // Process each record here
                 log.info("Consumed from Topic: {}, Partition: {}, Offset: {}, Timestamp: {}, Value: {}",
@@ -93,9 +102,14 @@ public class ConsumeInRangeMultipleTopics implements Runnable {
                     if(!treeSetHashMap.containsKey(type))
                         treeSetHashMap.put(type, new TreeSet<ABCEvent>(new TimestampComparator()));
                     treeSetHashMap.get(type).add(e);
+                    System.out.println(e.getTimestampDate());
+                    if(e.getTimestampDate().getTime() >= endTime)
+                        continueConsuming = false;
                 }
 
-                if (record.timestamp() >= endTime) {
+                System.out.println("end time == "+endTime+ " -- but event ts == "+record.timestamp());
+                if (continueConsuming || record.timestamp() >= endTime) {
+                    System.out.println("i have to stop consuming");
                     continueConsuming = false;
                     break;
                 }
@@ -108,6 +122,7 @@ public class ConsumeInRangeMultipleTopics implements Runnable {
                 consumer.commitSync();
             }
         }
+        System.out.println("finished consuming");
         this.eventManager.accept_onDemand(treeSetHashMap);
         consumer.close();
     }

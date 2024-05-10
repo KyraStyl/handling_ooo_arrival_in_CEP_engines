@@ -317,7 +317,7 @@ public class Engine {
 
 		long windowTime = window * 60 * 1000;
 
-		long oldest_ac_timestamp = e.getTimestamp().getTime() - windowTime;
+		long oldest_ac_timestamp = e.getTimestampDate().getTime() - windowTime;
 		Date oldest_ts = new Date(oldest_ac_timestamp);
 
 		String first = configs.first_state();
@@ -332,19 +332,6 @@ public class Engine {
 
 			if(type.equals(this.configs.last_state()))
 				continue;
-
-//			String tag = t.getSrc().getTag();
-
-//			if (!this.configs.containsTypeInKleene(type)){
-//				if (tag.contains("+"))
-//					this.configs.setKleeneState(type, true);
-//				else
-//					this.configs.setKleeneState(type, false);
-//			}
-
-//			tag = tag.replace("+","");
-
-//			System.out.println(type);
 
 			TreeSet<events.ABCEvent> set = eventManager.getTreeset(type);
 			if (set == null || set.isEmpty())
@@ -364,7 +351,7 @@ public class Engine {
 
 		ArrayList<events.ABCEvent> run = new ArrayList<>();
 		run.add(e);
-		System.out.println("Triggering match production process with event "+e.getName()+" @ " + e.getTimestamp());
+		System.out.println("Triggering match production process with event "+e.getName()+" @ " + e.getTimestampDate());
 		find_matches_once(1, subsets,run,false);
 //		deleteExpiredEvents();
 	}
@@ -427,78 +414,6 @@ public class Engine {
 //			Profiling.updateLatency(latency);
 		}
 	}
-
-/*
-	private void find_matches_once(int state, HashMap<String, TreeSet<events.ABCEvent>> subsets, ArrayList<events.ABCEvent> list){
-		State[] states = configs.states();
-		boolean notStartYet = states.length -1 -state >= 0;
-
-		if (notStartYet) {
-			int current_state_pos = states.length -1 - state;
-			State s = states[current_state_pos];
-
-			TreeSet<events.ABCEvent> subset = (TreeSet<events.ABCEvent>) subsets.get(s.getEventType());
-			if (subset == null)
-				System.out.println("set null");
-			subset = (TreeSet<events.ABCEvent>) subset.headSet((events.ABCEvent)list.get(0));
-
-			if(subset == null || subset.isEmpty())
-				return;
-			ArrayList<events.ABCEvent> run = new ArrayList<>();
-
-			for (events.ABCEvent evt : subset.descendingSet()) {
-				ArrayList<events.ABCEvent> match = new ArrayList<>(list);
-				if (configs.isKleene(s.getEventType())) {
-					events.ABCEvent prevEVT = subset.lower(evt);
-
-					if (current_state_pos - 1 >= 0) {
-						String prevState = states[current_state_pos - 1].getEventType();
-						TreeSet<events.ABCEvent> prevSet = (TreeSet<events.ABCEvent>) subsets.get(prevState);
-
-						if (prevEVT != null && prevSet != null && !prevSet.isEmpty() && !prevSet.floor(evt).equals(prevSet.floor(prevEVT))) {
-							match.addAll(0, run);
-							find_matches_once(state + 1, subsets, match);
-						}
-					}
-
-					if (run.isEmpty() || run.get(0) == null
-							|| ( !run.isEmpty() && evt.getTimestamp().getTime() >= run.get(0).getTimestamp().getTime()
-								&& evt.getTimestamp().getTime() - prevEVT.getTimestamp().getTime() <= configs.windowLength() * 60 * 1000)) {
-						run.add(0, evt);
-					}
-
-				} else {
-					if (match.get(0) == null || (evt.getTimestamp().getTime() <= match.get(0).getTimestamp().getTime() && evt.getTimestamp().getTime() - match.get(0).getTimestamp().getTime() <= configs.windowLength() * 60 * 1000)) {
-						match.add(0, evt);
-					}
-					find_matches_once(state + 1, subsets, match);
-				}
-			}
-
-			if (this.configs.isKleene(s.getEventType()) && !run.isEmpty()) {
-				list.addAll(0, run);
-				find_matches_once(state + 1, subsets, list);
-			}
-		}else{
-//			Run r = this.engineRunController.getRun();
-//			r.initializeEvents(this.nfa, list);
-//			r.setLifeTimeBegin(list.get(0).arrivalTime());
-//			activeRuns.add(r);
-			activeRunsNEW.add(list);
-//			System.out.print("THIS IS A NEW MATCH --> [");
-//			for(events.ABCEvent e : list){
-//				System.out.print(" "+e.toString()+" -");
-//			}
-//			System.out.print(" ] \n");
-			resultManager.acceptMatch(list);
-			long latency = System.nanoTime() - list.get(0).getTimestamp().getTime();
-//			Profiling.updateLatency(latency);
-//			if(!findAll) outputMatch(new Match(r, this.nfa, this.buffer));
-		}
-
-	}
-
- */
 
 
 	public void runCOREOnce(ABCEvent e, EventManager<events.ABCEvent> eventManager) throws EvaluationException {
@@ -890,6 +805,21 @@ public class Engine {
 			}
 		}
 	}
+
+	public void runOnceSTAMnoPartition(events.ABCEvent e) throws CloneNotSupportedException,EvaluationException{
+		long currentTime = System.nanoTime();
+		this.evaluateRunsForSkipTillAny(e);// evaluate existing runs
+		if(this.toDeleteRuns.size() > 0){
+			this.cleanRuns();
+		}
+		this.createNewRun(e);// create new run starting with this event if possible
+
+
+		Profiling.totalRunTime += (System.nanoTime() - currentTime);
+		Profiling.numberOfEvents += 1;
+	}
+
+
 	/**
 	 * The main method for skip-till-next-match
 	 * @throws CloneNotSupportedException
@@ -1036,6 +966,17 @@ public class Engine {
 					this.evaluateEventForSkipTillAny(e, r);
 				}
 		}
+
+	public void evaluateRunsForSkipTillAny(events.ABCEvent e) throws CloneNotSupportedException, EvaluationException{
+		int size = this.activeRuns.size();
+		for(int i = 0; i < size; i ++){
+			Run r = this.activeRuns.get(i);
+			if(r.isFull()){
+				continue;
+			}
+			this.evaluateEventForSkipTillAny(e, r);
+		}
+	}
 		/**
 		 * This method will iterate all existing runs for the current event, for skip-till-next-match.
 		 * @param e The current event which is being evaluated.
@@ -1311,6 +1252,58 @@ public class Engine {
 				}
 
 				}
+	}
+
+	public void evaluateEventForSkipTillAny(events.ABCEvent e, Run r) throws CloneNotSupportedException{
+		boolean checkResult = true;
+
+
+		checkResult = this.checkPredicate(e, r);// check predicate
+		if(checkResult){ // the predicate if ok.
+			checkResult = this.checkTimeWindow(e, r); // the time window is ok
+			if(checkResult){// predicate and time window are ok
+				this.buffer.bufferEvent(e);// add the event to buffer
+				int oldState = 0;
+				int newState = 0;
+
+				Run newRun = this.cloneRun(r); // clone this run
+
+				oldState = newRun.getCurrentState();
+				newRun.addEvent(e);					// add the event to this run
+				newState = newRun.getCurrentState();
+				if(oldState != newState){
+					this.activeRuns.add(newRun);
+				}else{//kleene closure
+					if(newRun.isFull){
+						//check match and output match
+						if(newRun.checkMatch()){
+							this.outputMatch(new Match(newRun, this.nfa, this.buffer));
+							long latency = System.nanoTime() - r.getLifeTimeBegin();
+							Profiling.updateLatency(latency);
+							Profiling.totalRunLifeTime += latency;
+						}
+					}else{
+						//check proceed
+						if(this.checkProceed(newRun)){
+							Run newerRun = this.cloneRun(newRun);
+							this.activeRuns.add(newRun);
+							newerRun.proceed();
+							if(newerRun.isComplete()){
+								this.outputMatch(new Match(r, this.nfa, this.buffer));
+								long latency = System.nanoTime() - r.getLifeTimeBegin();
+								Profiling.updateLatency(latency);
+								Profiling.totalRunLifeTime += latency;
+							}else {
+								this.activeRuns.add(newerRun);
+							}
+						}
+					}
+				}
+			}else{
+				this.toDeleteRuns.add(r);
+			}
+
+		}
 	}
 	/**
 	 * This method evaluates an event against a run, for skip-till-next-match

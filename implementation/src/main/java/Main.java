@@ -2,8 +2,10 @@ import events.*;
 import examples.ExampleCEP;
 import examples.LCExample;
 import kafka.*;
+import kafka.consumer.ConsumeInRangeMultipleTopics;
 import kafka.consumer.CustomKafkaListener;
 import managers.EventManager;
+import utils.ApplicationConstant;
 
 import java.util.*;
 import java.util.concurrent.ExecutionException;
@@ -43,23 +45,15 @@ public class Main {
         EventManager<ABCEvent> eventManager = new EventManager<>("src/main/resources/test.query", sources, estimatedArrivalTime);
         eventManager.initializeManager();
 
-//        ABCEvent event1 = new KeyValueEvent<Integer>("F1","2024-01-02T14:00:00.200", "Fitbit", "Steps","steps",120);
-//        ABCEvent event2 = new KeyValueEvent<Integer>("F2","2024-01-02T14:05:00.200", "Fitbit", "Stairs","stairs",3);
-//        ABCEvent event3 = new KeyValueEvent<Double>("S1","2024-01-02T14:20:00.200", "Scale", "Weight","weight",68.3);
-//        ABCEvent event4 = new KeyValueEvent<Double>("S2","2024-01-02T14:03:00.200", "Scale", "Height","height",165.2);
-
-
-//        TreeSet<ABCEvent> test = new TreeSet<>(new TimestampComparator());
-//        test.add(event1);
-//        test.add(event2);
-//        System.out.println(test.lower(event3));
-//        System.out.println(test.headSet(event3));
-//        System.out.println(test.lower(event4));
-//        System.out.println(test.headSet(event4));
-
         HashMap<String, Set<ABCEvent>> hashlist = new HashMap<>();
         HashMap<String, CustomKafkaListener> consumers = new HashMap<>();
         HashMap<String, Thread> threadsConsumers = new HashMap<>();
+
+//        List<String> topics = new ArrayList<>();
+//        topics.add("fitbit");
+//        topics.add("locations");
+//        ABCEvent mpw_start = new ABCEvent();
+//        ConsumeInRangeMultipleTopics kfConsumer = new ConsumeInRangeMultipleTopics(topics, ApplicationConstant.KAFKA_LOCAL_SERVER_CONFIG, this, mpw_start.getTimestamp().getTime(), mpw_end.getTimestamp().getTime());
 
         for(Source source:sources){
             Set<ABCEvent> tree = new TreeSet<>(new TimestampComparator());
@@ -82,22 +76,5 @@ public class Main {
 
         threadsConsumers.values().forEach(Thread::start);
 
-
-//        Date ts1 = castStrToDate("2024-02-03T10:45:50.020");
-//        Date ts2 = castStrToDate("2024-02-01T10:45:50.020");
-//        Date ts3 = castStrToDate("2024-02-03T10:40:50.020");
-//
-//
-//        // Elements are added using add() method
-//        tree.add(new ABCEvent("A","2024-02-03T10:45:50.020")); {"name":"A","timestamp":"2024-02-03T10:45:50.020"}
-//        tree.add(new ABCEvent("B","2024-02-01T10:45:50.020")); {"name":"B","timestamp":"2024-02-01T10:45:50.020"}
-//        tree.add(new ABCEvent("C","2024-02-03T10:40:50.020")); {"name":"C","timestamp":"2024-02-03T10:40:50.020"}
-//
-//        // Duplicates will not get insert
-//        tree.add(new ABCEvent("C",ts3));
-//
-//        // Elements get stored in default natural
-//        // Sorting Order(Ascending)
-//        System.out.println(tree);
     }
 }

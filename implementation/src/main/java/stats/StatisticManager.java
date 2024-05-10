@@ -98,7 +98,7 @@ public class StatisticManager {
     }
 
     private double calculateTimeDifference(ABCEvent e, String source, ABCEvent last) {
-        return Math.abs(e.getTimestamp().getTime()- last.getTimestamp().getTime() - actualArrivalRate.get(source));
+        return Math.abs(e.getTimestampDate().getTime()- last.getTimestampDate().getTime() - actualArrivalRate.get(source));
     }
 
     public double calculateThreshold(String source){

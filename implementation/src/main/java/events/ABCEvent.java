@@ -1,5 +1,6 @@
 package events;
 
+import cep.sasesystem.stream.Event;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Date;
@@ -7,7 +8,7 @@ import java.util.Objects;
 
 import static utils.UsefulFunctions.*;
 
-public class ABCEvent {
+public class ABCEvent implements Event {
     private Long id;
     private String name;
     private Date timestamp;
@@ -54,14 +55,65 @@ public class ABCEvent {
         return type;
     }
 
-    public Date getTimestamp(){ return timestamp; }
+    public Date getTimestampDate(){ return timestamp; }
+
+    public int getTimestamp(){ return (int) timestamp.getTime(); }
+
+    @Override
+    public String getEventType() {
+        return this.type;
+    }
+
+    @Override
+    public Object clone() {
+        return this;
+    }
+
+    @Override
+    public String prepareEvent() {
+        return this.toString();
+    }
+
+    @Override
+    public long arrivalTime() {
+        return 0;
+    }
 
     public void setTimestamp(Date timestamp) {
         this.timestamp = timestamp;
     }
 
-    public Long getId() {
+    @Override
+    public int getAttributeByName(String attributeName) {
+        return 0;
+    }
+
+    @Override
+    public double getAttributeByNameDouble(String attributeName) {
+        return 0;
+    }
+
+    @Override
+    public String getAttributeByNameString(String attributeName) {
+        return "";
+    }
+
+    @Override
+    public int getAttributeValueType(String attributeName) {
+        return 0;
+    }
+
+    public Long getIdLong() {
         return id;
+    }
+
+    public int getId() {
+        return Math.toIntExact(id);
+    }
+
+    @Override
+    public void setId(int Id) {
+
     }
 
     public void setId(Long id) {
@@ -90,12 +142,12 @@ public class ABCEvent {
         if (this == o) return true;
         if (!(o instanceof ABCEvent)) return false;
         ABCEvent abcEvent = (ABCEvent) o;
-        return Objects.equals(getId(), abcEvent.getId()) && Objects.equals(getName(), abcEvent.getName()) && Objects.equals(getTimestamp(), abcEvent.getTimestamp()) && Objects.equals(getSource(), abcEvent.getSource()) && Objects.equals(getType(), abcEvent.getType());
+        return Objects.equals(this.getId(), abcEvent.getId()) && Objects.equals(getName(), abcEvent.getName()) && Objects.equals(getTimestampDate(), abcEvent.getTimestampDate()) && Objects.equals(getSource(), abcEvent.getSource()) && Objects.equals(getType(), abcEvent.getType());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getName(), getTimestamp(), getSource(), getType());
+        return Objects.hash(this.getId(), getName(), getTimestampDate(), getSource(), getType());
     }
     
     public int compareTo(ABCEvent other) {

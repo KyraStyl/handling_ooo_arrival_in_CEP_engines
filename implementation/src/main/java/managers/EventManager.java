@@ -12,8 +12,8 @@ import net.sourceforge.jeval.EvaluationException;
 import utils.ApplicationConstant;
 import utils.Configs;
 
-import java.sql.SQLOutput;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static utils.UsefulFunctions.capitalize;
 
@@ -84,9 +84,9 @@ public class EventManager<T> {
                 this.allEventsReceived.put(source, new ArrayList<>());
             this.allEventsReceived.get(source).add((ABCEvent) event);
             this.latest_ts_arrived = this.latest_ts_arrived == null?
-                    ((ABCEvent) event).getTimestamp() :
-                    ((ABCEvent) event).getTimestamp().getTime() > latest_ts_arrived.getTime() ?
-                            ((ABCEvent) event).getTimestamp() : latest_ts_arrived;
+                    ((ABCEvent) event).getTimestampDate() :
+                    ((ABCEvent) event).getTimestampDate().getTime() > latest_ts_arrived.getTime() ?
+                            ((ABCEvent) event).getTimestampDate() : latest_ts_arrived;
         }
         else return;
 
@@ -147,8 +147,8 @@ public class EventManager<T> {
 
     //the whole pipeline for processing an incoming event
     public double processEvent(ABCEvent e, String source, ABCEvent last, Long timeWindow) {
-        double timediff = Math.abs(e.getTimestamp().getTime() - last.getTimestamp().getTime());;
-        if (e.getTimestamp().getTime() >= last.getTimestamp().getTime() && ( (latest_ts_arrived!= null && e.getTimestamp().getTime() >= latest_ts_arrived.getTime()) || latest_ts_arrived == null) ){ // this event is in-order
+        double timediff = Math.abs(e.getTimestampDate().getTime() - last.getTimestampDate().getTime());;
+        if (e.getTimestampDate().getTime() >= last.getTimestampDate().getTime() && ( (latest_ts_arrived!= null && e.getTimestampDate().getTime() >= latest_ts_arrived.getTime()) || latest_ts_arrived == null) ){ // this event is in-order
             statisticManager.processUpdateStats(e,0,timediff,source, false);
 //            System.out.println("THIS IS AN IN-ORDER EVENT "+e);
             return 0;
@@ -170,7 +170,7 @@ public class EventManager<T> {
         return -1;
     }
 
-    private void manageOutOfOrderEvent(ABCEvent e, String source){
+    private void manageOutOfOrderEvent(ABCEvent e, String source) {
         String type = e.getType();
 
         if(!type.equals(configs.last_state()) && (!getTreeset(configs.last_state()).isEmpty() && e.compareTo(getTreeset(configs.last_state()).last()) >= 0)){
@@ -182,10 +182,10 @@ public class EventManager<T> {
             System.out.println("EITHER LAST STATE - OR - ARRIVED WITH TS BEFORE LAST C");
 
             //define maximum potential window (MPW)
-            ABCEvent mpw_start = new events.ABCEvent(e.getName()+"_temp", new Date(e.getTimestamp().getTime() - configs.windowLength()),e.getSource()+"_temp", e.getType());
+            ABCEvent mpw_start = new events.ABCEvent(e.getName()+"_temp", new Date(e.getTimestampDate().getTime() - configs.windowLength()),e.getSource()+"_temp", e.getType());
             ABCEvent mpw_end;
-            Date ts_end = new Date(e.getTimestamp().getTime() + configs.windowLength());
-            if(latest_ts_arrived.compareTo(e.getTimestamp()) < 0)
+            Date ts_end = new Date(e.getTimestampDate().getTime() + configs.windowLength());
+            if(latest_ts_arrived.getTime() < e.getTimestampDate().getTime() )
                 ts_end = latest_ts_arrived;
 
             mpw_end = new events.ABCEvent(e.getName()+"_temp", ts_end,e.getSource()+"_temp", e.getType());;
@@ -196,13 +196,15 @@ public class EventManager<T> {
                 mpw_end = e;
             }
 
+            System.out.println("latest ts arrived == "+latest_ts_arrived+"  -- event ts == "+e.getTimestampDate()+ "  -- mpw_end ts == "+mpw_end.getTimestampDate());
+
             //find subsets
             HashMap<String, Object> results = calculate_subsets(mpw_start, mpw_end);
 
             HashMap<String, Boolean> booleans = (HashMap<String, Boolean>)(results.get("booleans"));
             HashMap<String, TreeSet<ABCEvent>> treesets = (HashMap<String, TreeSet<ABCEvent>>)(results.get("subsets"));
 
-            /*
+            // /*
             //check if you have all events needed
             Boolean flag = false;
             for(String ss : booleans.keySet()){
@@ -211,18 +213,32 @@ public class EventManager<T> {
                     break;
                 }
             }
-             */
+             //*/
 
-            boolean flag = false;
+//            boolean flag = false;
 
             //if you dont have the appropriate data, create a custom on-demand kafka consumer, and retrieve the desired events
             if (flag){
                 System.out.println("I DONT HAVE THE APPROPRIATE EVENTS");
                 List<String> topics = new ArrayList<>();
-                for(String s: booleans.keySet())
-                    topics.add(s);
-                ConsumeInRangeMultipleTopics kfConsumer = new ConsumeInRangeMultipleTopics(topics, ApplicationConstant.KAFKA_LOCAL_SERVER_CONFIG, this, mpw_start.getTimestamp().getTime(), mpw_end.getTimestamp().getTime());
-                kfConsumer.run();
+                for(Source src: sources){
+                    for(String s: booleans.keySet()) {
+                        if (src.hasEventType(s))
+                            topics.add(src.name());
+                    }
+                }
+
+                topics = topics.stream().distinct().collect(Collectors.toList());
+                ConsumeInRangeMultipleTopics kfConsumer = new ConsumeInRangeMultipleTopics(topics, ApplicationConstant.KAFKA_LOCAL_SERVER_CONFIG, this, mpw_start.getTimestampDate().getTime(), mpw_end.getTimestampDate().getTime());
+
+                Thread t = new Thread(kfConsumer);
+                t.start();
+                try{
+                    t.join();
+                }catch (InterruptedException ex) {
+                    throw new RuntimeException(ex);
+                }
+
             }else{
                 //trigger find_matches_once (function from engine)
                 engineController.runOnDemand(treesets,e);
@@ -267,7 +283,7 @@ public class EventManager<T> {
 
     private void remove_expired_events(events.ABCEvent end_event){
 
-        ABCEvent exp_last_ = new events.ABCEvent(end_event.getName()+"_temp", new Date(end_event.getTimestamp().getTime() - 2*configs.windowLength()),end_event.getSource()+"_temp", end_event.getType());
+        ABCEvent exp_last_ = new events.ABCEvent(end_event.getName()+"_temp", new Date(end_event.getTimestampDate().getTime() - 2*configs.windowLength()),end_event.getSource()+"_temp", end_event.getType());
 
         for( String key : configs.transitions().keySet()){
             Transition t = engineController.getTransitions().get(key);

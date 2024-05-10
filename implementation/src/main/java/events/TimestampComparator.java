@@ -8,8 +8,8 @@ public class TimestampComparator implements Comparator<ABCEvent> {
     @Override
     public int compare(ABCEvent o1, ABCEvent o2) {
 //        System.out.println("COMPARING "+o1.toString()+" WITH "+o2.toString());
-        Date o1date = o1.getTimestamp();
-        Date o2date = o2.getTimestamp();
+        Date o1date = o1.getTimestampDate();
+        Date o2date = o2.getTimestampDate();
         return o1date.compareTo(o2date);
     }
 }
