@@ -5,7 +5,7 @@ import events.TimestampComparator;
 
 import java.util.PriorityQueue;
 
-class EventBuffer {
+public class EventBuffer {
     private PriorityQueue<ABCEvent> buffer;
     private int aep; // already emitted pointer
     private ABCEvent aepEvent;
@@ -23,6 +23,7 @@ class EventBuffer {
 
     public void addEvent(ABCEvent event) {
         this.buffer.add(event);
+
     }
 
     public ABCEvent getNextEvent() {

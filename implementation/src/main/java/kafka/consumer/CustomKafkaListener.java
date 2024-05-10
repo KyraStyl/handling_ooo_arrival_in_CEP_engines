@@ -5,6 +5,7 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
 
+import germanoi.EventBuffer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import events.ABCEvent;
 import events.Source;
@@ -24,6 +25,7 @@ public class CustomKafkaListener<T> implements Runnable {
     private ObjectMapper objectMapper;
     private EventManager eventManager;
     private Source<T> source;
+    private EventBuffer buffer;
 
 
     public CustomKafkaListener(String topic, KafkaConsumer<String, String> consumer, Set<T> tree, Source<T> source) {
@@ -36,7 +38,7 @@ public class CustomKafkaListener<T> implements Runnable {
         this.source = source;
     }
 
-    public CustomKafkaListener(String topic, KafkaConsumer<String, String> consumer, Set<T> tree, EventManager eventManager, Source<T> source) {
+    public CustomKafkaListener(String topic, KafkaConsumer<String, String> consumer, Set<T> tree, EventManager eventManager, Source<T> source, EventBuffer buffer) {
         this.topic = topic;
         this.consumer = consumer;
         this.recordConsumer = record -> log.info("received: " + record);
@@ -44,14 +46,15 @@ public class CustomKafkaListener<T> implements Runnable {
         this.objectMapper = new ObjectMapper();
         this.eventManager = eventManager;
         this.source = source;
+        this.buffer = buffer;
     }
 
     public CustomKafkaListener(String topic, String bootstrapServers, Set<T> tree, Source<T> source) {
         this(topic, defaultKafkaConsumer(bootstrapServers), tree, source);
     }
 
-    public CustomKafkaListener(String topic, String bootstrapServers, Set<T> tree, EventManager eventManager, Source<T> source) {
-        this(topic, defaultKafkaConsumer(bootstrapServers), tree, eventManager, source);
+    public CustomKafkaListener(String topic, String bootstrapServers, Set<T> tree, EventManager eventManager, Source<T> source, EventBuffer buffer) {
+        this(topic, defaultKafkaConsumer(bootstrapServers), tree, eventManager, source, buffer);
     }
 
     private static KafkaConsumer<String, String> defaultKafkaConsumer(String boostrapServers) {
@@ -103,6 +106,7 @@ public class CustomKafkaListener<T> implements Runnable {
                 for (ABCEvent e : eventsExtracted) {
                     System.out.println("Source == " + source.name() + "-- event ts == " + e.getTimestampDate());
                     eventManager.acceptEvent(e.getType(), e);
+                    buffer.addEvent(e);
                 }
                 consumer.commitSync(Collections.singletonMap(
                         new TopicPartition(record.topic(), record.partition()),

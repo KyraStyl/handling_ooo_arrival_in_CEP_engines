@@ -15,6 +15,7 @@ public class ABCEvent implements Event {
     private static Long idcounter = 0L;
     private String source;
     private String type;
+    private long ingestionTime;
 
     @JsonCreator
     public ABCEvent(@JsonProperty("name") String name, @JsonProperty("timestamp") Date timestamp, @JsonProperty("source") String source, String type){
@@ -23,6 +24,7 @@ public class ABCEvent implements Event {
         this.name = name;
         this.timestamp = timestamp;
         this.source = source;
+        this.ingestionTime = System.currentTimeMillis();
         idcounter++;
     }
 
@@ -32,6 +34,7 @@ public class ABCEvent implements Event {
         this.name = name;
         this.timestamp = castStrToDate(timestamp);
         this.source = source;
+        this.ingestionTime = System.currentTimeMillis();
         idcounter++;
     }
 

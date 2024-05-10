@@ -1,3 +1,4 @@
+import germanoi.EventBuffer;
 import events.*;
 import examples.ExampleCEP;
 import examples.LCExample;
@@ -45,6 +46,8 @@ public class Main {
         EventManager<ABCEvent> eventManager = new EventManager<>("src/main/resources/test.query", sources, estimatedArrivalTime);
         eventManager.initializeManager();
 
+        EventBuffer buffer = new EventBuffer();
+
         HashMap<String, Set<ABCEvent>> hashlist = new HashMap<>();
         HashMap<String, CustomKafkaListener> consumers = new HashMap<>();
         HashMap<String, Thread> threadsConsumers = new HashMap<>();
@@ -58,7 +61,7 @@ public class Main {
         for(Source source:sources){
             Set<ABCEvent> tree = new TreeSet<>(new TimestampComparator());
             hashlist.put(source.name(), tree);
-            consumers.put(source.name(), new CustomKafkaListener(source.name(), defaultBootStrapServer, hashlist.get(source), eventManager, source));
+            consumers.put(source.name(), new CustomKafkaListener(source.name(), defaultBootStrapServer, hashlist.get(source), eventManager, source, buffer));
             threadsConsumers.put(source.name(), new Thread(consumers.get(source.name())));
         }
 
