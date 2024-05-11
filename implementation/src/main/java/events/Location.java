@@ -11,13 +11,13 @@ public class Location extends ABCEvent{
     private long patientID;
     private Position position;
 
-    public Location(String name, Date timestamp) {
-        super(name, timestamp, "Locations", "Location");
+    public Location(String name, Date timestamp, int symbol) {
+        super(name, timestamp, "Locations", "Locations",symbol);
     }
 
 
-    public Location(String name, String timestamp, long patientID, Position position){
-        super(name, timestamp,"Locations", position.location);
+    public Location(String name, String timestamp, long patientID, Position position, int symbol){
+        super(name, timestamp,"Locations", position.location, symbol);
         this.patientID = patientID;
         this.position = position;
     }

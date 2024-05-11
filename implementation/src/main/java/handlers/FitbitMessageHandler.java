@@ -24,9 +24,9 @@ public class FitbitMessageHandler implements KafkaMessageHandler {
         double stairs = fitbit.getDouble("stairs");
         double naps = fitbit.getDouble("naps");
 
-        KeyValueEvent<Double> stepsE = new KeyValueEvent<>("steps_"+counter,date, this.source, "Steps" ,"steps", steps);
-        KeyValueEvent<Double> stairsE = new KeyValueEvent<>("stairs_"+counter,date, this.source, "Stairs", "stairs", stairs);
-        KeyValueEvent<Double> napsE = new KeyValueEvent<>("naps_"+counter,date, this.source, "Naps", "naps", naps);
+        KeyValueEvent<Double> stepsE = new KeyValueEvent<>("steps_"+counter,date, this.source, "Steps" ,"steps", steps, 1);
+        KeyValueEvent<Double> stairsE = new KeyValueEvent<>("stairs_"+counter,date, this.source, "Stairs", "stairs", stairs, 2);
+        KeyValueEvent<Double> napsE = new KeyValueEvent<>("naps_"+counter,date, this.source, "Naps", "naps", naps, 4);
 
         ArrayList<ABCEvent> toreturn = new ArrayList<>();
         toreturn.add(stepsE);

@@ -548,6 +548,28 @@ public class Run  implements Cloneable{
 	}
 
 	@Override
+	public String toString() {
+		return "Run{" +
+				"eventIds=" + eventIds +
+				", partitonId=" + partitonId +
+				", state=" + Arrays.toString(state) +
+				", size=" + size +
+				", count=" + count +
+				", nfa=" + nfa +
+				", alive=" + alive +
+				", currentState=" + currentState +
+				", isComplete=" + isComplete +
+				", isFull=" + isFull +
+				", lifeTimeBegin=" + lifeTimeBegin +
+				", startTimeStamp=" + startTimeStamp +
+				", kleeneClosureInitialized=" + kleeneClosureInitialized +
+				", valueVector=" + Arrays.toString(valueVector) +
+				", beforeNegationTimestamp=" + beforeNegationTimestamp +
+				", afterNegationTimestamp=" + afterNegationTimestamp +
+				'}';
+	}
+
+	@Override
 	public boolean equals(Object o) {
 		if (this == o) return true;
 		if (!(o instanceof Run)) return false;

@@ -308,7 +308,14 @@ public class State {
 		
 	}
 
-	
+	public boolean canStartWith(Event e) throws EvaluationException{
+
+		if(!e.getEventType().equalsIgnoreCase(this.eventType)){
+			return false;
+		}
+		return false;
+
+	}
 	
 	
 	

@@ -16,30 +16,33 @@ public class ABCEvent implements Event {
     private String source;
     private String type;
     private long ingestionTime;
+    private int symbol;
 
     @JsonCreator
-    public ABCEvent(@JsonProperty("name") String name, @JsonProperty("timestamp") Date timestamp, @JsonProperty("source") String source, String type){
+    public ABCEvent(@JsonProperty("name") String name, @JsonProperty("timestamp") Date timestamp, @JsonProperty("source") String source, String type, int symbol){
+        this.ingestionTime = System.currentTimeMillis();
         this.type = type;
         this.id = idcounter;
         this.name = name;
         this.timestamp = timestamp;
         this.source = source;
-        this.ingestionTime = System.currentTimeMillis();
+        this.symbol = symbol;
         idcounter++;
     }
 
-    public ABCEvent(@JsonProperty("name") String name, @JsonProperty("timestamp") String timestamp, @JsonProperty("source") String source, String type){
+    public ABCEvent(@JsonProperty("name") String name, @JsonProperty("timestamp") String timestamp, @JsonProperty("source") String source, String type, int symbol){
+        this.ingestionTime = System.currentTimeMillis();
         this.type = type;
         this.id = idcounter;
         this.name = name;
         this.timestamp = castStrToDate(timestamp);
         this.source = source;
-        this.ingestionTime = System.currentTimeMillis();
+        this.symbol = symbol;
         idcounter++;
     }
 
-    public ABCEvent(@JsonProperty("name") String name, @JsonProperty("timestamp") String timestamp, String type){
-        this(name,castStrToDate(timestamp), "none", type);
+    public ABCEvent(@JsonProperty("name") String name, @JsonProperty("timestamp") String timestamp, String type, int symbol){
+        this(name,castStrToDate(timestamp), "none", type, symbol);
     }
 
     public String getSource() {
@@ -56,6 +59,14 @@ public class ABCEvent implements Event {
 
     public String getType() {
         return type;
+    }
+
+    public void setSymbol(int symbol) {
+        this.symbol = symbol;
+    }
+
+    public int getSymbol() {
+        return symbol;
     }
 
     public Date getTimestampDate(){ return timestamp; }
@@ -88,7 +99,11 @@ public class ABCEvent implements Event {
 
     @Override
     public int getAttributeByName(String attributeName) {
-        return 0;
+        switch (attributeName){
+            case "symbol": return this.symbol;
+            case "id": return this.getId();
+            default: return 0;
+        }
     }
 
     @Override

@@ -337,7 +337,7 @@ public class Engine {
 			if (set == null || set.isEmpty())
 				return;
 			set = (TreeSet<events.ABCEvent>) set.headSet(e, true);
-			events.ABCEvent enew = new events.ABCEvent(e.getName()+"_temp",oldest_ts,e.getSource()+"_temp", e.getType());
+			events.ABCEvent enew = new events.ABCEvent(e.getName()+"_temp",oldest_ts,e.getSource()+"_temp", e.getType(),e.getSymbol());
 			events.ABCEvent start = set.floor(enew);
 			if(start == null && !set.isEmpty())
 				start = set.first();
@@ -1563,6 +1563,7 @@ public class Engine {
 			//this.numberOfRuns.update(1);
 			Profiling.numberOfRuns ++;
 			this.activeRuns.add(newRun);
+			System.out.println(newRun);
 		}
 	}
 	/**

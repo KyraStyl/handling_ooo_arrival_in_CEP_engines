@@ -175,6 +175,16 @@ public class EngineController {
 		myEngine.find_matches_once(1,subsets,list,true);
 	}
 
+	public void runSASEonce(ABCEvent e){
+        try {
+            myEngine.runOnceSTAMnoPartition(e);
+        } catch (CloneNotSupportedException ex) {
+            throw new RuntimeException(ex);
+        } catch (EvaluationException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
 	public void setConfigs(Configs configs) {
 		this.configs = configs;
 		myEngine.setConfigs(configs);

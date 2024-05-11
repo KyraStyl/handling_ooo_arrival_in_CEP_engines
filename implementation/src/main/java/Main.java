@@ -2,11 +2,13 @@ import germanoi.EventBuffer;
 import events.*;
 import examples.ExampleCEP;
 import examples.LCExample;
+import germanoi.SpeculativeProcessor;
 import kafka.*;
 import kafka.consumer.ConsumeInRangeMultipleTopics;
 import kafka.consumer.CustomKafkaListener;
 import managers.EventManager;
 import utils.ApplicationConstant;
+import utils.Configs;
 
 import java.util.*;
 import java.util.concurrent.ExecutionException;
@@ -25,6 +27,7 @@ public class Main {
 //            System.exit(100);
 //        }
 
+        boolean runMine = true;
 
         String defaultBootStrapServer = KAFKA_LOCAL_SERVER_CONFIG;
         KafkaAdminClient kafkaAdminClient = new KafkaAdminClient(defaultBootStrapServer);
@@ -42,11 +45,18 @@ public class Main {
         ArrayList<Source> sources = lc.getSources();
         HashMap<String,Long> estimatedArrivalTime = lc.getEstimated();
 
+        Configs globalConfigs = new Configs();
 
-        EventManager<ABCEvent> eventManager = new EventManager<>("src/main/resources/test.query", sources, estimatedArrivalTime);
-        eventManager.initializeManager();
+        EventManager<ABCEvent> eventManager = null;
+        SpeculativeProcessor speculativeProcessor = null;
 
-        EventBuffer buffer = new EventBuffer();
+        if(runMine){
+            eventManager = new EventManager<>("src/main/resources/test.query", sources, estimatedArrivalTime, globalConfigs);
+            eventManager.initializeManager();
+        }else{
+            speculativeProcessor = new SpeculativeProcessor(globalConfigs);
+            EventBuffer buffer = new EventBuffer(globalConfigs);
+        }
 
         HashMap<String, Set<ABCEvent>> hashlist = new HashMap<>();
         HashMap<String, CustomKafkaListener> consumers = new HashMap<>();
@@ -61,7 +71,7 @@ public class Main {
         for(Source source:sources){
             Set<ABCEvent> tree = new TreeSet<>(new TimestampComparator());
             hashlist.put(source.name(), tree);
-            consumers.put(source.name(), new CustomKafkaListener(source.name(), defaultBootStrapServer, hashlist.get(source), eventManager, source, buffer));
+            consumers.put(source.name(), new CustomKafkaListener(source.name(), defaultBootStrapServer, hashlist.get(source), eventManager, source, speculativeProcessor));
             threadsConsumers.put(source.name(), new Thread(consumers.get(source.name())));
         }
 

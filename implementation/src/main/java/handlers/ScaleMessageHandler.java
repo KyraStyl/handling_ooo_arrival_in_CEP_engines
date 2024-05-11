@@ -24,10 +24,10 @@ public class ScaleMessageHandler implements KafkaMessageHandler {
         double bmi = scale.getDouble("bmi");
         String bmicat = scale.getString("bmiCategory");
 
-        KeyValueEvent<Double> weightE = new KeyValueEvent<>("weight_"+counter,date, this.source, "Weight", "weight", weight);
-        KeyValueEvent<Double> heightE = new KeyValueEvent<>("height_"+counter,date, this.source, "Height", "height", height);
-        KeyValueEvent<Double> bmiE = new KeyValueEvent<>("bmi_"+counter,date, this.source, "Bmi", "bmi", bmi);
-        KeyValueEvent<String> bmiCE = new KeyValueEvent<>("bmiCat_"+counter,date, this.source, "BmiCat", "bmicat", bmicat);
+        KeyValueEvent<Double> weightE = new KeyValueEvent<>("weight_"+counter,date, this.source, "Weight", "weight", weight, 5);
+        KeyValueEvent<Double> heightE = new KeyValueEvent<>("height_"+counter,date, this.source, "Height", "height", height, 6);
+        KeyValueEvent<Double> bmiE = new KeyValueEvent<>("bmi_"+counter,date, this.source, "Bmi", "bmi", bmi, 7);
+        KeyValueEvent<String> bmiCE = new KeyValueEvent<>("bmiCat_"+counter,date, this.source, "BmiCat", "bmicat", bmicat, 8);
 
         toreturn.add(weightE);
         toreturn.add(heightE);

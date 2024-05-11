@@ -1,6 +1,7 @@
 package managers;
 
 import kafka.consumer.ConsumeInRangeMultipleTopics;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
 import stats.StatisticManager;
 import cep.sasesystem.engine.EngineController;
 import cep.sasesystem.query.State;
@@ -30,18 +31,18 @@ public class EventManager<T> {
     private Date latest_ts_arrived;
 
 
-    public EventManager (String nfaFileLocation, ArrayList<Source> sources){
+    public EventManager (String nfaFileLocation, ArrayList<Source> sources, Configs configs){
         this.allEventsReceived = new HashMap<>();
         this.nfaFileLocation = nfaFileLocation;
         this.engineController = new EngineController("once");
         this.statisticManager = new StatisticManager();
         this.resultManager = new ResultManager();
-        this.configs = new Configs();
+        this.configs = configs;
         this.sources = sources;
     }
 
-    public EventManager (String nfaFileLocation, ArrayList<Source> sources, HashMap<String, Long> estimated){
-        this(nfaFileLocation,sources);
+    public EventManager (String nfaFileLocation, ArrayList<Source> sources, HashMap<String, Long> estimated, Configs configs){
+        this(nfaFileLocation,sources,configs);
         this.statisticManager.setEstimated(estimated);
     }
 
@@ -182,13 +183,13 @@ public class EventManager<T> {
             System.out.println("EITHER LAST STATE - OR - ARRIVED WITH TS BEFORE LAST C");
 
             //define maximum potential window (MPW)
-            ABCEvent mpw_start = new events.ABCEvent(e.getName()+"_temp", new Date(e.getTimestampDate().getTime() - configs.windowLength()),e.getSource()+"_temp", e.getType());
+            ABCEvent mpw_start = new events.ABCEvent(e.getName()+"_temp", new Date(e.getTimestampDate().getTime() - configs.windowLength()),e.getSource()+"_temp", e.getType(), e.getSymbol());
             ABCEvent mpw_end;
             Date ts_end = new Date(e.getTimestampDate().getTime() + configs.windowLength());
             if(latest_ts_arrived.getTime() < e.getTimestampDate().getTime() )
                 ts_end = latest_ts_arrived;
 
-            mpw_end = new events.ABCEvent(e.getName()+"_temp", ts_end,e.getSource()+"_temp", e.getType());;
+            mpw_end = new events.ABCEvent(e.getName()+"_temp", ts_end,e.getSource()+"_temp", e.getType(), e.getSymbol());;
 
             if (e.getType().equals(configs.first_state())){
                 mpw_start = e;
@@ -283,7 +284,7 @@ public class EventManager<T> {
 
     private void remove_expired_events(events.ABCEvent end_event){
 
-        ABCEvent exp_last_ = new events.ABCEvent(end_event.getName()+"_temp", new Date(end_event.getTimestampDate().getTime() - 2*configs.windowLength()),end_event.getSource()+"_temp", end_event.getType());
+        ABCEvent exp_last_ = new events.ABCEvent(end_event.getName()+"_temp", new Date(end_event.getTimestampDate().getTime() - 2*configs.windowLength()),end_event.getSource()+"_temp", end_event.getType(), end_event.getSymbol());
 
         for( String key : configs.transitions().keySet()){
             Transition t = engineController.getTransitions().get(key);

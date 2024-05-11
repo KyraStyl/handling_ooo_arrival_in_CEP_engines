@@ -1,15 +1,16 @@
 package germanoi;
 import events.ABCEvent;
+import utils.Configs;
 
 import java.util.Random;
 
-class SpeculativeProcessor {
+public class SpeculativeProcessor {
     private EventBuffer buffer;
     private double alpha;  // Degree of speculation, 1.0 means no speculation.
     private Random random;
 
-    public SpeculativeProcessor() {
-        buffer = new EventBuffer();
+    public SpeculativeProcessor(Configs configs) {
+        buffer = new EventBuffer(configs);
         alpha = 1.0;  // Start with no speculation
         random = new Random();
     }

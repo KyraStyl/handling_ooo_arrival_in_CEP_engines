@@ -25,7 +25,7 @@ public class LocationMessageHandler implements KafkaMessageHandler {
         int ta = input.getInt("totalActivations");
         int ra = input.getInt("recentActivations");
 
-        Location l = new Location("location_"+counter, ts, patientID, new Location.Position(loc,de, du, ta, ra));
+        Location l = new Location("location_"+counter, ts, patientID, new Location.Position(loc,de, du, ta, ra),3);
 
         ArrayList<ABCEvent> toreturn = new ArrayList<>();
         toreturn.add(l);
