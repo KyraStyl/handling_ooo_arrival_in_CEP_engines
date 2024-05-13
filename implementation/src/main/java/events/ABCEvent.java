@@ -138,6 +138,10 @@ public class ABCEvent implements Event {
         this.id = id;
     }
 
+    public long getIngestionTime() {
+        return ingestionTime;
+    }
+
     public String getName() {
         return name;
     }

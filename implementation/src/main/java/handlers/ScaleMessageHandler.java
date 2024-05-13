@@ -12,13 +12,10 @@ public class ScaleMessageHandler implements KafkaMessageHandler {
 
     @Override
     public ArrayList<ABCEvent> processMessage(JSONObject input) {
-//        System.out.println(input);
-
         ArrayList<ABCEvent> toreturn = new ArrayList<>();
 
         JSONObject scale = input.getJSONObject("scale");
         String date = scale.getString("timestamp");
-        System.out.println("Date in handler == "+ date);
         double weight = scale.getDouble("weight");
         double height = scale.getDouble("height");
         double bmi = scale.getDouble("bmi");

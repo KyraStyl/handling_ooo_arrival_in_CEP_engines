@@ -33,12 +33,6 @@ public class Main {
         KafkaAdminClient kafkaAdminClient = new KafkaAdminClient(defaultBootStrapServer);
         System.out.println(kafkaAdminClient.verifyConnection());
 
-        ArrayList<String> listOfSources = new ArrayList<>();
-
-        listOfSources.add("fitbit");
-        listOfSources.add("locations");
-        listOfSources.add("scale");
-
         ExampleCEP lc = new LCExample();
         lc.initializeExample();
 
@@ -46,14 +40,15 @@ public class Main {
         HashMap<String,Long> estimatedArrivalTime = lc.getEstimated();
 
         Configs globalConfigs = new Configs();
+        globalConfigs.setNfaFileLocation("src/main/resources/test.query");
 
         EventManager<ABCEvent> eventManager = null;
         SpeculativeProcessor speculativeProcessor = null;
 
         if(runMine){
-            eventManager = new EventManager<>("src/main/resources/test.query", sources, estimatedArrivalTime, globalConfigs);
+            eventManager = new EventManager<>(sources, estimatedArrivalTime, globalConfigs);
             eventManager.initializeManager();
-        }else{
+//        }else{
             speculativeProcessor = new SpeculativeProcessor(globalConfigs);
             EventBuffer buffer = new EventBuffer(globalConfigs);
         }
@@ -61,12 +56,6 @@ public class Main {
         HashMap<String, Set<ABCEvent>> hashlist = new HashMap<>();
         HashMap<String, CustomKafkaListener> consumers = new HashMap<>();
         HashMap<String, Thread> threadsConsumers = new HashMap<>();
-
-//        List<String> topics = new ArrayList<>();
-//        topics.add("fitbit");
-//        topics.add("locations");
-//        ABCEvent mpw_start = new ABCEvent();
-//        ConsumeInRangeMultipleTopics kfConsumer = new ConsumeInRangeMultipleTopics(topics, ApplicationConstant.KAFKA_LOCAL_SERVER_CONFIG, this, mpw_start.getTimestamp().getTime(), mpw_end.getTimestamp().getTime());
 
         for(Source source:sources){
             Set<ABCEvent> tree = new TreeSet<>(new TimestampComparator());

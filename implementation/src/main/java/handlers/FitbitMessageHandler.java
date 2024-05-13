@@ -19,7 +19,6 @@ public class FitbitMessageHandler implements KafkaMessageHandler {
     private ArrayList<ABCEvent> extract_values(JSONObject input) {
         JSONObject fitbit = input.getJSONObject("fitbit");
         String date = fitbit.getString("timestamp");
-        System.out.println("Date in handler == "+ date);
         double steps = fitbit.getDouble("steps");
         double stairs = fitbit.getDouble("stairs");
         double naps = fitbit.getDouble("naps");

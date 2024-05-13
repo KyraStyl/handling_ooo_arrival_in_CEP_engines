@@ -29,6 +29,7 @@ import events.ABCEvent;
 import net.sourceforge.jeval.EvaluationException;
 import cep.sasesystem.query.*;
 import cep.sasesystem.stream.Stream;
+import stats.Profiling;
 import utils.Configs;
 import managers.EventManager;
 import managers.ResultManager;
@@ -175,9 +176,9 @@ public class EngineController {
 		myEngine.find_matches_once(1,subsets,list,true);
 	}
 
-	public void runSASEonce(ABCEvent e){
+	public void runSASEonce(ABCEvent e, Profiling profiling){
         try {
-            myEngine.runOnceSTAMnoPartition(e);
+            myEngine.runOnceSTAMnoPartition(e, profiling);
         } catch (CloneNotSupportedException ex) {
             throw new RuntimeException(ex);
         } catch (EvaluationException ex) {

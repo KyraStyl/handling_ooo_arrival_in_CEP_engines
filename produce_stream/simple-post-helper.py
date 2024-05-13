@@ -44,6 +44,8 @@ def create_scale_message(timestamp, weight, height, bmi, bmiCat, send_rate):
 def create_locs_message(timestamp, loc, dateEntered, dateUpdate, totalActivations, recentActivations, send_rate):
     return {"location":loc,"timestamp":timestamp, "dateEntered":dateEntered, "dateUpdate":dateUpdate, "totalActivations": totalActivations, "recentActivations":recentActivations}
     
+def create_terminate_message():
+    return {"message":"terminate process"}
     
 
 if __name__ == '__main__':
@@ -81,6 +83,9 @@ if __name__ == '__main__':
     scale2 = create_scale_message(datetime.now().strftime('%Y-%m-%dT%H:%M:%S'), 85.0, 175, 22.5, "normal", 60)
     send_message(producer, "Scale", scale2, 60)
     
+    terminate = create_terminate_message()
+    send_message(producer, "Terminate", terminate, 60)
+    
     producer.close()
     
     
@@ -89,5 +94,6 @@ if __name__ == '__main__':
     topics_info = [
                     ('Fitbit', 60),  # Send every 20 seconds
                     ('Scale', 5*60), # Send every 300 seconds (5min)
-                    ('Locations', 2*60) # Send every 120 seconds (2min)
+                    ('Locations', 2*60), # Send every 120 seconds (2min)
+                    ('Terminate', 10)
                 ]

@@ -1,6 +1,7 @@
 package managers;
 
 import events.ABCEvent;
+import stats.Profiling;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -13,16 +14,20 @@ public class ResultManager {
     private HashMap<Integer, Boolean> emitted; //integer of match, and true or false whether it is emitted to the user
     private HashMap<Integer, Boolean> updated; //integer of match, and true or false whether it is updated or not
     private HashMap<Integer, Boolean> ooo; //integer of match, and true or false whether it is ooo or not
+    private Profiling profiling;
 
-    public ResultManager(){
+    public ResultManager(Profiling p){
         this.counter = 0;
         this.matches = new ArrayList<>();
         this.emitted = new HashMap<>();
         this.updated = new HashMap<>();
         this.ooo = new HashMap<>();
+        this.profiling = p;
     }
 
     public void acceptMatch(ArrayList<ABCEvent> m, boolean oooflag){
+        long latency = System.currentTimeMillis() - m.get(0).getIngestionTime();
+        this.profiling.updateProfiling(latency);
         this.matches.add(m);
         this.emitted.put(counter,true);
         this.updated.put(counter,false);

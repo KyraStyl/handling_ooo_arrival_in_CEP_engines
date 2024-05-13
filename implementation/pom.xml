@@ -91,6 +91,19 @@
             <artifactId>jackson-databind</artifactId>
             <version>${jackson.databind.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>com.github.oshi</groupId>
+            <artifactId>oshi-core</artifactId>
+            <version>6.5.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna</artifactId>
+            <version>5.12.1</version>
+        </dependency>
+
     </dependencies>
 
     <build>

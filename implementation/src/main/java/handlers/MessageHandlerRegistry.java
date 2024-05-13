@@ -10,6 +10,7 @@ public class MessageHandlerRegistry {
         handlerMap.put("Fitbit", new FitbitMessageHandler());
         handlerMap.put("Scale", new ScaleMessageHandler());
         handlerMap.put("Location", new LocationMessageHandler());
+        handlerMap.put("Terminate", new TerminateMessageHandler());
     }
 
     public static KafkaMessageHandler getHandler(String messageType) {

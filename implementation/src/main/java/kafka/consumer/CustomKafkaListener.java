@@ -98,14 +98,12 @@ public class CustomKafkaListener<T> implements Runnable {
 
         try {
             if (eventManager != null || speculativeProcessor != null) {
-                //            System.out.println(record.value());
                 JSONObject message = new JSONObject(record.value());
-                //            System.out.println(message);
-                //            System.out.println(record.timestamp());
-                //                this.messageSet.add((T) event);
                 ArrayList<ABCEvent> eventsExtracted = source.processMessage(message);
+                boolean terminate = false;
                 for (ABCEvent e : eventsExtracted) {
                     System.out.println("Source == " + source.name() + "-- event ts == " + e.getTimestampDate());
+                    terminate = source.name().equalsIgnoreCase("terminate");
                     if(eventManager != null)
                         eventManager.acceptEvent(e.getType(), e);
                     if(speculativeProcessor != null)
@@ -114,6 +112,9 @@ public class CustomKafkaListener<T> implements Runnable {
                 consumer.commitSync(Collections.singletonMap(
                         new TopicPartition(record.topic(), record.partition()),
                         new OffsetAndMetadata(record.offset() + 1)));
+//                if(terminate)
+//                    System.exit(200);
+
             }
         }catch (Exception e){
             System.out.println("Failed to process record: "+e.getMessage());

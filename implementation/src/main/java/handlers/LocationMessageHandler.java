@@ -19,7 +19,6 @@ public class LocationMessageHandler implements KafkaMessageHandler {
 
         String loc = input.getString("location");
         String ts = input.getString("timestamp");
-        System.out.println("Date in handler == "+ ts);
         String de = input.getString("dateEntered");
         String du = input.getString("dateUpdate");
         int ta = input.getInt("totalActivations");

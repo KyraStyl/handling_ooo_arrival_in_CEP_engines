@@ -7,7 +7,7 @@ import java.util.Locale;
 import java.util.TimeZone;
 
 public class UsefulFunctions {
-    private static SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.ITALY);
+    public static SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.ITALY);
 
     public static Date castStrToDate(String datetocast){
         formatter.setTimeZone(TimeZone.getTimeZone("EET"));

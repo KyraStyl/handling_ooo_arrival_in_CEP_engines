@@ -17,6 +17,8 @@ latest_ts_fitbit = None
 latest_ts_locs = None
 latest_ts_scale = None
 
+numberOfEvents = 0
+terminate = False
 
 def create_producer(server='localhost:9092'):
     """Create a Kafka producer."""
@@ -27,10 +29,16 @@ def create_producer(server='localhost:9092'):
 def send_message(producer, topic, send_interval):
     """Send a message to a Kafka topic at a specified interval."""
     while True:
+        global numberOfEvents
+        numberOfEvents +=1
+        if numberOfEvents > 1000:
+            global terminate
+            terminate = True
         message = define_message(topic, send_interval)
         producer.send(topic, value=message)
         producer.flush()
         print(f"Message sent to topic {topic}")
+        send_interval += random.uniform(0, 1)*send_interval
         time.sleep(send_interval)
 
 def start_thread(producer, topic, send_interval):
@@ -46,10 +54,10 @@ def define_message(topic, send_interval):
         return create_scale_message(send_interval)
     elif topic == "Locations":
         return create_locs_message(send_interval)
+    elif topic == "Terminate":
+        return create_terminate_message()
     
 def create_fitbit_message(send_rate):
-    # global latest_ts_fitbit
-    # timestamp = latest_ts_fitbit.strftime('%Y-%m-%dT%H:%M:%S')
     
     timestamp = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
     steps = random.randint(100, 20000)*1.0
@@ -59,13 +67,9 @@ def create_fitbit_message(send_rate):
     
     print (message)
     
-    # latest_ts_fitbit = latest_ts_fitbit + timedelta(seconds=send_rate)
-    
     return message
 
 def create_scale_message(send_rate):
-    # global latest_ts_scale
-    # timestamp = latest_ts_scale.strftime('%Y-%m-%dT%H:%M:%S')
     
     timestamp = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
     weight = random.uniform(68.0, 77.0)
@@ -76,13 +80,9 @@ def create_scale_message(send_rate):
     
     print(message)
     
-    # latest_ts_scale = latest_ts_scale + timedelta(seconds=send_rate)
-    
     return message
 
 def create_locs_message(send_rate):
-    # global latest_ts_locs
-    # timestamp = latest_ts_locs.strftime('%Y-%m-%dT%H:%M:%S')
     
     timestamp = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
     loc = "Bedroom"
@@ -94,9 +94,11 @@ def create_locs_message(send_rate):
     
     print(message)
     
-    # latest_ts_locs = latest_ts_locs + timedelta(seconds=send_rate)
     
     return message
+
+def create_terminate_message():
+    return {"message":"terminate process"}
     
     
 
@@ -109,9 +111,9 @@ if __name__ == '__main__':
 
     # Define topics, messages, and their corresponding send intervals (in seconds)
     topics_info = [
-                    ('Fitbit', 60),  # Send every 20 seconds
-                    ('Scale', 5*60), # Send every 240 seconds (4min)
-                    ('Locations', 2*60) # Send every 60 seconds (1min)
+                    ('Fitbit', 10),  # Send every 20 seconds
+                    ('Scale', 60), # Send every 240 seconds (4min)
+                    ('Locations', 30) # Send every 60 seconds (1min)
                 ]
 
     # Start a new thread for each topic
@@ -122,6 +124,9 @@ if __name__ == '__main__':
     try:
         while True:
             time.sleep(1)
+            if terminate:
+                send_message(producer, "Terminate", 0)
+                sys.exit(3)
     except KeyboardInterrupt:
         sys.exit(2)
         print("Stopped by the user")

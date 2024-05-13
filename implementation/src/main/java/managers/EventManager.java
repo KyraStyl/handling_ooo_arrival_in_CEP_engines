@@ -1,7 +1,7 @@
 package managers;
 
 import kafka.consumer.ConsumeInRangeMultipleTopics;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
+import stats.Profiling;
 import stats.StatisticManager;
 import cep.sasesystem.engine.EngineController;
 import cep.sasesystem.query.State;
@@ -20,7 +20,6 @@ import static utils.UsefulFunctions.capitalize;
 
 public class EventManager<T> {
 
-    public String nfaFileLocation;
     private HashMap<String, ArrayList<ABCEvent>> allEventsReceived;
     HashMap<String, TreeSet<ABCEvent>> acceptedEventsHashlist = new HashMap<>();
     private EngineController engineController;
@@ -29,29 +28,31 @@ public class EventManager<T> {
     private Configs configs;
     private ArrayList<Source> sources;
     private Date latest_ts_arrived;
+    private Date oldest_ts_arrived;
+    private Profiling profiling;
 
 
-    public EventManager (String nfaFileLocation, ArrayList<Source> sources, Configs configs){
+    public EventManager (ArrayList<Source> sources, Configs configs){
         this.allEventsReceived = new HashMap<>();
-        this.nfaFileLocation = nfaFileLocation;
         this.engineController = new EngineController("once");
         this.statisticManager = new StatisticManager();
-        this.resultManager = new ResultManager();
+        this.profiling = new Profiling("Our Solution");
+        this.resultManager = new ResultManager(this.profiling);
         this.configs = configs;
         this.sources = sources;
     }
 
-    public EventManager (String nfaFileLocation, ArrayList<Source> sources, HashMap<String, Long> estimated, Configs configs){
-        this(nfaFileLocation,sources,configs);
+    public EventManager (ArrayList<Source> sources, HashMap<String, Long> estimated, Configs configs){
+        this(sources,configs);
         this.statisticManager.setEstimated(estimated);
     }
 
     public void initializeManager(){
         this.latest_ts_arrived = null;
+        this.oldest_ts_arrived = null;
         this.allEventsReceived = new HashMap<>();
         this.engineController.setConfigs(this.configs);
-        this.configs.setNfaFileLocation(this.nfaFileLocation);
-        this.engineController.setNfa(this.nfaFileLocation);
+        this.engineController.setNfa(this.configs.nfaFileLocation());
         this.engineController.setEngine();
         this.engineController.initializeEngine();
         initializeConfigs();
@@ -75,6 +76,14 @@ public class EventManager<T> {
 
     public void acceptEvent(String source, T event){
         source = capitalize(source);
+
+        if (terminate(event)){
+            this.profiling.printProfiling();
+//            return;
+        }
+        this.oldest_ts_arrived = this.oldest_ts_arrived == null? ((ABCEvent) event).getTimestampDate() : this.oldest_ts_arrived;
+
+        this.profiling.increaseEvents();
 
         double oooscore = 0;
 
@@ -130,6 +139,10 @@ public class EventManager<T> {
         }
     }
 
+    private boolean terminate(T event) {
+        return ((ABCEvent) event).getName().equalsIgnoreCase("terminate");
+    }
+
     private ABCEvent find_last(T event, String source) {
         TreeSet<ABCEvent> treeset = acceptedEventsHashlist.get(source);
         if (treeset != null && !treeset.isEmpty())
@@ -183,13 +196,17 @@ public class EventManager<T> {
             System.out.println("EITHER LAST STATE - OR - ARRIVED WITH TS BEFORE LAST C");
 
             //define maximum potential window (MPW)
-            ABCEvent mpw_start = new events.ABCEvent(e.getName()+"_temp", new Date(e.getTimestampDate().getTime() - configs.windowLength()),e.getSource()+"_temp", e.getType(), e.getSymbol());
-            ABCEvent mpw_end;
+            Date ts_start = new Date(e.getTimestampDate().getTime() - configs.windowLength());
+            if(oldest_ts_arrived.getTime() > ts_start.getTime())
+                ts_start = oldest_ts_arrived;
+
+            ABCEvent mpw_start = new events.ABCEvent(e.getName()+"_temp", ts_start,e.getSource()+"_temp", e.getType(), e.getSymbol());
+
             Date ts_end = new Date(e.getTimestampDate().getTime() + configs.windowLength());
-            if(latest_ts_arrived.getTime() < e.getTimestampDate().getTime() )
+            if(latest_ts_arrived.getTime() < ts_end.getTime() )
                 ts_end = latest_ts_arrived;
 
-            mpw_end = new events.ABCEvent(e.getName()+"_temp", ts_end,e.getSource()+"_temp", e.getType(), e.getSymbol());;
+            ABCEvent mpw_end = new events.ABCEvent(e.getName()+"_temp", ts_end,e.getSource()+"_temp", e.getType(), e.getSymbol());;
 
             if (e.getType().equals(configs.first_state())){
                 mpw_start = e;
@@ -205,7 +222,6 @@ public class EventManager<T> {
             HashMap<String, Boolean> booleans = (HashMap<String, Boolean>)(results.get("booleans"));
             HashMap<String, TreeSet<ABCEvent>> treesets = (HashMap<String, TreeSet<ABCEvent>>)(results.get("subsets"));
 
-            // /*
             //check if you have all events needed
             Boolean flag = false;
             for(String ss : booleans.keySet()){
@@ -214,9 +230,8 @@ public class EventManager<T> {
                     break;
                 }
             }
-             //*/
 
-//            boolean flag = false;
+            flag = false;
 
             //if you dont have the appropriate data, create a custom on-demand kafka consumer, and retrieve the desired events
             if (flag){
@@ -231,6 +246,7 @@ public class EventManager<T> {
 
                 topics = topics.stream().distinct().collect(Collectors.toList());
                 ConsumeInRangeMultipleTopics kfConsumer = new ConsumeInRangeMultipleTopics(topics, ApplicationConstant.KAFKA_LOCAL_SERVER_CONFIG, this, mpw_start.getTimestampDate().getTime(), mpw_end.getTimestampDate().getTime());
+                kfConsumer.setTreesets(treesets);
 
                 Thread t = new Thread(kfConsumer);
                 t.start();
@@ -262,21 +278,17 @@ public class EventManager<T> {
             String type = t.getEventType();
             TreeSet<events.ABCEvent> set = getTreeset(type);
 
-
+            boolean count = set.subSet(start,true,end,true).size() > 0;
 
             booleans.put(type,false);
-            if(set.first() == null || start.compareTo(set.first()) < 0 || end.compareTo(set.last()) < 0)
+            if(set == null || set.isEmpty() || !count ||
+                    start.getTimestampDate().getTime() < set.first().getTimestampDate().getTime()
+                    || end.getTimestampDate().getTime() > set.last().getTimestampDate().getTime())
                 booleans.put(type,true);
 
-
-//            if((start == null && !set.isEmpty()) || start.compareTo(set.first()) < 0)
-//                start = set.first();
-//            if((end == null && !set.isEmpty()) || end.compareTo(set.last()) < 0)
-//                end = set.last();
             set = (TreeSet<events.ABCEvent>) set.subSet(start,true,end,true);
 
             treesets.put(type+"_subset",set);
-
         }
 
         return results;
@@ -298,7 +310,10 @@ public class EventManager<T> {
     }
 
     public void accept_onDemand(HashMap<String, TreeSet<ABCEvent>> treeSetHashMap){
-        //trigger find_matches_once (function from engine)
+        for(String key: treeSetHashMap.keySet()){
+            if (treeSetHashMap.get(key).isEmpty())
+                return;
+        }
         engineController.runOnDemand(treeSetHashMap,treeSetHashMap.get(configs.last_state()).last());
     }
 

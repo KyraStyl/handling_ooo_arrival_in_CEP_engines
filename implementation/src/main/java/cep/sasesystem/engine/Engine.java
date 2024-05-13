@@ -28,6 +28,7 @@ package cep.sasesystem.engine;
 //import hybridutils.CetConfig;
 //import hybridutils.CetManager;
 import cep.sasesystem.stream.ABCEvent;
+import events.Location;
 import net.sourceforge.jeval.EvaluationException;
 import cep.sasesystem.query.*;
 import cep.sasesystem.stream.Event;
@@ -806,9 +807,9 @@ public class Engine {
 		}
 	}
 
-	public void runOnceSTAMnoPartition(events.ABCEvent e) throws CloneNotSupportedException,EvaluationException{
+	public void runOnceSTAMnoPartition(events.ABCEvent e, stats.Profiling profiling) throws CloneNotSupportedException,EvaluationException{
 		long currentTime = System.nanoTime();
-		this.evaluateRunsForSkipTillAny(e);// evaluate existing runs
+		this.evaluateRunsForSkipTillAny(e, profiling);// evaluate existing runs
 		if(this.toDeleteRuns.size() > 0){
 			this.cleanRuns();
 		}
@@ -967,17 +968,18 @@ public class Engine {
 				}
 		}
 
-	public void evaluateRunsForSkipTillAny(events.ABCEvent e) throws CloneNotSupportedException, EvaluationException{
-		int size = this.activeRuns.size();
-		for(int i = 0; i < size; i ++){
-			Run r = this.activeRuns.get(i);
-			if(r.isFull()){
-				continue;
+		public void evaluateRunsForSkipTillAny(events.ABCEvent e, stats.Profiling profiling) throws CloneNotSupportedException, EvaluationException{
+			int size = this.activeRuns.size();
+			for(int i = 0; i < size; i ++){
+				Run r = this.activeRuns.get(i);
+				if(r.isFull()){
+					continue;
+				}
+				this.evaluateEventForSkipTillAny(e, r, profiling);
 			}
-			this.evaluateEventForSkipTillAny(e, r);
 		}
-	}
-		/**
+
+	/**
 		 * This method will iterate all existing runs for the current event, for skip-till-next-match.
 		 * @param e The current event which is being evaluated.
 		 * @throws CloneNotSupportedException
@@ -1254,7 +1256,7 @@ public class Engine {
 				}
 	}
 
-	public void evaluateEventForSkipTillAny(events.ABCEvent e, Run r) throws CloneNotSupportedException{
+	public void evaluateEventForSkipTillAny(events.ABCEvent e, Run r, stats.Profiling profiling) throws CloneNotSupportedException{
 		boolean checkResult = true;
 
 
@@ -1279,6 +1281,7 @@ public class Engine {
 						if(newRun.checkMatch()){
 							this.outputMatch(new Match(newRun, this.nfa, this.buffer));
 							long latency = System.nanoTime() - r.getLifeTimeBegin();
+							profiling.updateProfiling(latency);
 							Profiling.updateLatency(latency);
 							Profiling.totalRunLifeTime += latency;
 						}
@@ -1291,6 +1294,7 @@ public class Engine {
 							if(newerRun.isComplete()){
 								this.outputMatch(new Match(r, this.nfa, this.buffer));
 								long latency = System.nanoTime() - r.getLifeTimeBegin();
+								profiling.updateProfiling(latency);
 								Profiling.updateLatency(latency);
 								Profiling.totalRunLifeTime += latency;
 							}else {
@@ -1563,7 +1567,18 @@ public class Engine {
 			//this.numberOfRuns.update(1);
 			Profiling.numberOfRuns ++;
 			this.activeRuns.add(newRun);
-			System.out.println(newRun);
+		}
+	}
+
+	public void createNewRun(Event e, stats.Profiling profiling) throws EvaluationException{
+		if(this.nfa.getStates()[0].canStartWithEvent(e)){
+			this.buffer.bufferEvent(e);
+			Run newRun = this.engineRunController.getRun();
+			newRun.initializeRun(this.nfa);
+			newRun.addEvent(e);
+			//this.numberOfRuns.update(1);
+			Profiling.numberOfRuns ++;
+			this.activeRuns.add(newRun);
 		}
 	}
 	/**

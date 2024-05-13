@@ -25,6 +25,7 @@ public class ConsumeInRangeMultipleTopics implements Runnable {
     private final long startTime;
     private final long endTime;
     private EventManager eventManager;
+    private HashMap<String, TreeSet<ABCEvent>> treesets;
 
     public ConsumeInRangeMultipleTopics(List<String> topics, KafkaConsumer<String, String> consumer, EventManager eventManager, long startTime, long endTime) {
         this.topics = topics;
@@ -77,13 +78,12 @@ public class ConsumeInRangeMultipleTopics implements Runnable {
         });
 
         boolean continueConsuming = true;
-        HashMap<String, TreeSet<ABCEvent>> treeSetHashMap = new HashMap<>();
 
         while (continueConsuming) {
             System.out.println("continue consuming");
             ConsumerRecords<String, String> records = null;
             try {
-                records = consumer.poll(Duration.ofMillis(100000));
+                records = consumer.poll(Duration.ofMillis(5000));
                 System.out.println("i consumed "+records.count()+" events");
             } catch (WakeupException e) {
                 // Ignore for shutdown
@@ -99,10 +99,9 @@ public class ConsumeInRangeMultipleTopics implements Runnable {
 
                 for(ABCEvent e: eventsExtracted){
                     String type = e.getType();
-                    if(!treeSetHashMap.containsKey(type))
-                        treeSetHashMap.put(type, new TreeSet<ABCEvent>(new TimestampComparator()));
-                    treeSetHashMap.get(type).add(e);
-                    System.out.println(e.getTimestampDate());
+                    if(!treesets.containsKey(type))
+                        treesets.put(type, new TreeSet<ABCEvent>(new TimestampComparator()));
+                    treesets.get(type).add(e);
                     if(e.getTimestampDate().getTime() >= endTime)
                         continueConsuming = false;
                 }
@@ -123,7 +122,14 @@ public class ConsumeInRangeMultipleTopics implements Runnable {
             }
         }
         System.out.println("finished consuming");
-        this.eventManager.accept_onDemand(treeSetHashMap);
+        if (!treesets.isEmpty()) {
+            this.eventManager.accept_onDemand(treesets);
+            treesets.clear();
+        }
         consumer.close();
+    }
+
+    public void setTreesets(HashMap<String, TreeSet<ABCEvent>> treesets) {
+        this.treesets = (HashMap<String, TreeSet<ABCEvent>>) treesets.clone();
     }
 }
