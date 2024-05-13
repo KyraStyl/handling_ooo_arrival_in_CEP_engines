@@ -42,6 +42,7 @@ public class SpeculativeProcessor {
         latest_arrived = current_ts > latest_arrived ? current_ts : latest_arrived; //keep track of the max long ts received - maybe unnecessary?
 
         if(terminate(event)) {
+//            processAllBufferedEvents(event);
             profiling.printProfiling();
         }
 
@@ -58,13 +59,17 @@ public class SpeculativeProcessor {
             buffer.addEvent(event);
         }
 
-
-        while (!buffer.isEmpty() && !shouldBuffer(event)) {
-            speculate();
-        }
+        buffer.addEvent(event);
+        processAllBufferedEvents(event);
 
         if(shouldPurgeEvents(event))
             this.buffer.purgeEvents();
+    }
+
+    private void processAllBufferedEvents(ABCEvent event){
+        while (!buffer.isEmpty() && !shouldBuffer(event)) {
+            speculate();
+        }
     }
 
     private boolean terminate(ABCEvent event) {

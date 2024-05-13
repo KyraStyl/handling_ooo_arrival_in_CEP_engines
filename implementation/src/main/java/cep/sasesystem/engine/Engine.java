@@ -366,8 +366,9 @@ public class Engine {
 			State current_state = states[current_state_p];
 
 			TreeSet<events.ABCEvent> subset = subsets.get(current_state.getEventType());
-			if (subset == null)
-				System.out.println("set null");
+			if (subset == null) {
+				System.out.println("set null"); //maybe return
+			}
 
 			subset = (TreeSet<events.ABCEvent>) subset.headSet(list.get(0));
 

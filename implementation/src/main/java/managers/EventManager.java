@@ -258,6 +258,9 @@ public class EventManager<T> {
 
             }else{
                 //trigger find_matches_once (function from engine)
+                for(TreeSet<ABCEvent> treeSet : treesets.values())
+                    if(treeSet == null || treeSet.isEmpty())
+                        return;
                 engineController.runOnDemand(treesets,e);
             }
         }
@@ -278,10 +281,8 @@ public class EventManager<T> {
             String type = t.getEventType();
             TreeSet<events.ABCEvent> set = getTreeset(type);
 
-            boolean count = set.subSet(start,true,end,true).size() > 0;
-
             booleans.put(type,false);
-            if(set == null || set.isEmpty() || !count ||
+            if(set == null || set.isEmpty() || set.subSet(start,true,end,true).isEmpty() ||
                     start.getTimestampDate().getTime() < set.first().getTimestampDate().getTime()
                     || end.getTimestampDate().getTime() > set.last().getTimestampDate().getTime())
                 booleans.put(type,true);

@@ -31,7 +31,7 @@ def send_message(producer, topic, send_interval):
     while True:
         global numberOfEvents
         numberOfEvents +=1
-        if numberOfEvents > 1000:
+        if numberOfEvents > 20:
             global terminate
             terminate = True
         message = define_message(topic, send_interval)
@@ -57,6 +57,19 @@ def define_message(topic, send_interval):
     elif topic == "Terminate":
         return create_terminate_message()
     
+def define_send_interval(send_interval, prob):
+    r = random.randint(1, 100)
+    print("random int == "+str(r))
+    ooo_add = 0
+    pp = 100-prob
+    print("probability to be ooo is "+ str(pp))
+    if r>pp:
+        a = random.uniform(0, 1)
+        print("multiplier of interval a == "+str(a))
+        ooo_add = a*send_interval
+    send_interval += ooo_add
+    return send_interval
+
 def create_fitbit_message(send_rate):
     
     timestamp = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
@@ -112,7 +125,7 @@ if __name__ == '__main__':
     # Define topics, messages, and their corresponding send intervals (in seconds)
     topics_info = [
                     ('Fitbit', 10),  # Send every 20 seconds
-                    ('Scale', 60), # Send every 240 seconds (4min)
+                    #('Scale', 60), # Send every 240 seconds (4min)
                     ('Locations', 30) # Send every 60 seconds (1min)
                 ]
 

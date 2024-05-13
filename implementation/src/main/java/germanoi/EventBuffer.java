@@ -26,7 +26,6 @@ public class EventBuffer {
 
     public void addEvent(ABCEvent event) {
         this.buffer.add(event);
-        System.out.println("i just got a new event "+ event.getName());
     }
 
     public ABCEvent getNextEvent() {

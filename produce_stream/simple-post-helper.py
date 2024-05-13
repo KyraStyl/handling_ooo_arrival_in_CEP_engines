@@ -53,18 +53,18 @@ if __name__ == '__main__':
     producer = create_producer()
     
     fitbit1 = create_fitbit_message(datetime.now().strftime('%Y-%m-%dT%H:%M:%S'), 5000, 3.0, 2.0, 60)
-    send_message(producer, "Fitbit", fitbit1, 60)
+    send_message(producer, "Fitbit", fitbit1, 20)
     
     fitbit2 = create_fitbit_message(datetime.now().strftime('%Y-%m-%dT%H:%M:%S'), 5050, 5.0, 2.0, 60)
-    time.sleep(60)
+    time.sleep(20)
     
     locs1 = create_locs_message(datetime.now().strftime('%Y-%m-%dT%H:%M:%S'), "Bedroom", "2024-01-01T10:10:00", "2024-01-01T10:15:00", 5.0, 3.0, 60)
-    send_message(producer, "Locations", locs1, 60)
+    send_message(producer, "Locations", locs1, 40)
     
-    scale1 = create_scale_message(datetime.now().strftime('%Y-%m-%dT%H:%M:%S'), 85.0, 175, 22.5, "normal", 60)
-    send_message(producer, "Scale", scale1, 60)
+    # scale1 = create_scale_message(datetime.now().strftime('%Y-%m-%dT%H:%M:%S'), 85.0, 175, 22.5, "normal", 60)
+    # send_message(producer, "Scale", scale1, 60)
     
-    send_message(producer, "Fitbit", fitbit2, 60)
+    send_message(producer, "Fitbit", fitbit2, 20)
 
     
     fttest = create_fitbit_message(datetime.now().strftime('%Y-%m-%dT%H:%M:%S'), 1, 1.0, 1.0, 10)
@@ -72,16 +72,16 @@ if __name__ == '__main__':
     
     
     fitbit3 = create_fitbit_message(datetime.now().strftime('%Y-%m-%dT%H:%M:%S'), 5000, 3.0, 2.0, 60)
-    send_message(producer, "Fitbit", fitbit3, 60)
+    send_message(producer, "Fitbit", fitbit3, 20)
     
     fitbit4 = create_fitbit_message(datetime.now().strftime('%Y-%m-%dT%H:%M:%S'), 5050, 5.0, 2.0, 60)
-    send_message(producer, "Fitbit", fitbit4, 60)
+    send_message(producer, "Fitbit", fitbit4, 20)
     
     locs2 = create_locs_message(datetime.now().strftime('%Y-%m-%dT%H:%M:%S'), "Bedroom", "2024-01-01T11:20:00", "2024-01-01T11:25:00", 5.0, 3.0, 60)
-    send_message(producer, "Locations", locs2, 60)
+    send_message(producer, "Locations", locs2, 40)
     
-    scale2 = create_scale_message(datetime.now().strftime('%Y-%m-%dT%H:%M:%S'), 85.0, 175, 22.5, "normal", 60)
-    send_message(producer, "Scale", scale2, 60)
+    # scale2 = create_scale_message(datetime.now().strftime('%Y-%m-%dT%H:%M:%S'), 85.0, 175, 22.5, "normal", 60)
+    # send_message(producer, "Scale", scale2, 60)
     
     terminate = create_terminate_message()
     send_message(producer, "Terminate", terminate, 60)
@@ -92,8 +92,8 @@ if __name__ == '__main__':
 
     # Define topics, messages, and their corresponding send intervals (in seconds)
     topics_info = [
-                    ('Fitbit', 60),  # Send every 20 seconds
+                    ('Fitbit', 20),  # Send every 20 seconds
                     ('Scale', 5*60), # Send every 300 seconds (5min)
-                    ('Locations', 2*60), # Send every 120 seconds (2min)
+                    ('Locations', 40), # Send every 120 seconds (2min)
                     ('Terminate', 10)
                 ]

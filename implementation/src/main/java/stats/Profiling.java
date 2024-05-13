@@ -29,7 +29,7 @@ public class Profiling {
         maxMemoryUsed = 0;
 
         numberOfEvents = 0;
-        solution = solution;
+        this.solution = solution;
     }
 
     private void updateMaxLatency(long latency){
@@ -62,7 +62,7 @@ public class Profiling {
         System.out.println();
         System.out.println("**************Profiling Numbers*****************");
 //        System.out.println("Total Running Time: " + ((double)totalRunTime  / 1_000_000_000)+" seconds");
-        System.out.println("Solution: "+ solution);
+        System.out.println("Solution: "+ this.solution);
         System.out.println("Number Of Events Processed: " + numberOfEvents);
         System.out.println("Number Of Matches Found: " + numOfMatches);
         System.out.println("Used memory is bytes: " + memoryUsed);
@@ -71,8 +71,10 @@ public class Profiling {
         System.out.println("Maximum Latency in nano: " + maxLatency);
         System.out.println("Minimum Latency in nano: " + minLatency);
 
+
+
         if (numOfMatches > 0)
-            System.out.println("Average Latency in nano: " + avgLatency/numOfMatches);
+            System.out.println("Average Latency in nano: " + avgLatency);
         else
             System.out.println("No matches found!");
 
