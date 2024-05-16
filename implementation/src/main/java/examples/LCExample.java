@@ -25,14 +25,14 @@ public class LCExample implements ExampleCEP {
 
     private void initializeSources() {
         this.sources = new ArrayList<>();
-        Source fitbit = new Source("Fitbit", new FitbitMessageHandler(), secondsToMillis(10));
+        Source fitbit = new Source("Fitbit", new FitbitMessageHandler(), secondsToMillis(60));
         fitbit.addType("Steps", KeyValueEvent.class);
         fitbit.addType("Stairs", KeyValueEvent.class);
         fitbit.addType("HR", KeyValueEvent.class);
 
         this.sources.add(fitbit);
 
-        Source locations = new Source("Locations", new LocationMessageHandler(), secondsToMillis(30));
+        Source locations = new Source("Locations", new LocationMessageHandler(), secondsToMillis(300));
         locations.addType("Bedroom", Location.class);
 //        locations.addType("Bathroom", KeyValueEvent.class);
 //        locations.addType("Livingroom", KeyValueEvent.class);
@@ -41,7 +41,7 @@ public class LCExample implements ExampleCEP {
 
         sources.add(locations);
 
-        Source scale = new Source("Scale", new ScaleMessageHandler(), secondsToMillis(60));
+        Source scale = new Source("Scale", new ScaleMessageHandler(), secondsToMillis(20*60));
         scale.addType("Weight", KeyValueEvent.class);
         scale.addType("Height", KeyValueEvent.class);
         scale.addType("BMI", KeyValueEvent.class);

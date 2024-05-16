@@ -31,14 +31,14 @@ def send_message(producer, topic, send_interval):
     while True:
         global numberOfEvents
         numberOfEvents +=1
-        if numberOfEvents > 20:
+        if numberOfEvents > 1000:
             global terminate
             terminate = True
         message = define_message(topic, send_interval)
         producer.send(topic, value=message)
         producer.flush()
         print(f"Message sent to topic {topic}")
-        send_interval += random.uniform(0, 1)*send_interval
+        send_interval = define_send_interval(send_interval, 20)
         time.sleep(send_interval)
 
 def start_thread(producer, topic, send_interval):
@@ -124,9 +124,9 @@ if __name__ == '__main__':
 
     # Define topics, messages, and their corresponding send intervals (in seconds)
     topics_info = [
-                    ('Fitbit', 10),  # Send every 20 seconds
+                    ('Fitbit', 5),  # Send every 20 seconds
                     #('Scale', 60), # Send every 240 seconds (4min)
-                    ('Locations', 30) # Send every 60 seconds (1min)
+                    ('Locations', 15) # Send every 60 seconds (1min)
                 ]
 
     # Start a new thread for each topic

@@ -48,7 +48,7 @@ public class Main {
         if(runMine){
             eventManager = new EventManager<>(sources, estimatedArrivalTime, globalConfigs);
             eventManager.initializeManager();
-//        }else{
+        }else{
             speculativeProcessor = new SpeculativeProcessor(globalConfigs);
             EventBuffer buffer = new EventBuffer(globalConfigs);
         }
