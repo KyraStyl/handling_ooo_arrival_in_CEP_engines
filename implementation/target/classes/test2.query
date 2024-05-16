@@ -1,6 +1,0 @@
-PATTERN SEQ(Steps+ a[], Bedroom+ b[], Weight c)
-WHERE skip-till-any-match
-AND a[i].symbol = 1
-AND b.symbol = 2
-AND c.symbol = 3
-WITHIN 10000

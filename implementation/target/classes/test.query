@@ -1,6 +1,0 @@
-PATTERN SEQ(Steps a, Stairs b, Bedroom c)
-WHERE skip-till-any-match
-AND a.symbol == 1
-AND b.symbol == 2
-AND c.symbol == 3
-WITHIN 600000
